@@ -3,6 +3,7 @@
 --@import see.net.Http
 --@import see.concurrent.ThreadPool
 --@import see.io.Terminal
+--@import see.util.Color
 
 function OmegleClient.main(args)
     local threadPool = ThreadPool.new()
@@ -10,6 +11,10 @@ function OmegleClient.main(args)
     local connected = true
     local typing = false
     local connectionHook
+
+    if Terminal.isColor() then
+        Terminal.setFG(Color.PURPLE)
+    end
 
     if session.commonLikes then
         local intString = String.new()
@@ -31,11 +36,21 @@ function OmegleClient.main(args)
         if event then
             if event.type == OmegleSession.EVENT_MESSAGE then
                 Terminal.clearLine()
-                System.print(STR("Stranger: ", event.message))
+                if Terminal.isColor() then
+                    Terminal.setFG(Color.RED)
+                    System.write("Stranger: ")
+                    Terminal.setFG(Color.YELLOW)
+                else
+                    System.write("Stranger: ")
+                end
+                System.print(event.message)
                 drawInput(typing, sendString)
             elseif event.type == OmegleSession.EVENT_TYPING then
                 typing = not typing
             elseif event.type == OmegleSession.EVENT_DISCONNECTED then
+                if Terminal.isColor() then
+                    Terminal.setFG(Color.PURPLE)
+                end
                 System.print("Stranger disconnected.")
                 connected = false
                 Hooks.remove(connectionHook)
@@ -52,7 +67,14 @@ function OmegleClient.main(args)
     Hooks.add("key", function(k)
         if k == 28 then
             session:send(sendString)
-            System.print(STR("You: ", sendString))
+            if Terminal.isColor() then
+                Terminal.setFG(Color.BLUE)
+                System.write("You: ")
+                Terminal.setFG(Color.YELLOW)
+            else
+                System.write("You: ")
+            end
+            System.print(sendString)
             sendString = String.new()
             drawInput(typing, sendString)
         elseif k == 14 then
@@ -62,6 +84,9 @@ function OmegleClient.main(args)
         elseif k == 157 then
             connected = false
             session:disconnect()
+            if Terminal.isColor() then
+                Terminal.setFG(Color.PURPLE)
+            end
             System.print("You have disconnected.")
         end
     end)
@@ -72,6 +97,10 @@ function OmegleClient.main(args)
 end
 
 function drawInput(typing, message)
+    if Terminal.isColor() then
+        Terminal.setFG(Color.WHITE)
+    end
+
     local pos = Terminal.getPos()
     local size = Terminal.getSize()
     Terminal.setPos(1, size.y)

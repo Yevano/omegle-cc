@@ -531,7 +531,7 @@
 			"file": "me/yevano/omegle/client/OmegleClient.lua",
 			"settings":
 			{
-				"buffer_size": 2671,
+				"buffer_size": 2835,
 				"line_ending": "Windows"
 			}
 		},
@@ -933,15 +933,15 @@
 					"file": "me/yevano/omegle/client/OmegleClient.lua",
 					"settings":
 					{
-						"buffer_size": 2671,
+						"buffer_size": 2835,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								139,
-								139
+								1880,
+								1880
 							]
 						],
 						"settings":
@@ -951,7 +951,7 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 450.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"

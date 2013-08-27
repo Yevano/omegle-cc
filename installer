@@ -1,4 +1,4 @@
-local REPO_URL = "http://yevano.me/omegle-cc/"
+local REPO_URL = "https://raw.github.com/Yevano/omegle-cc/master/"
 local SUPPORTS_COLOR = term.isColor()
 
 local MAKE_PATHS = {
