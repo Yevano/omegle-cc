@@ -1,16 +1,12 @@
 --@import me.yevano.omegle.OmegleSession
---@import see.hook.Hooks
 --@import see.net.Http
---@import see.concurrent.ThreadPool
 --@import see.io.Terminal
 --@import see.util.Color
 
 function OmegleClient.main(args)
-    local threadPool = ThreadPool.new()
     local session = OmegleSession.new(args:unpack())
     local connected = true
     local typing = false
-    local connectionHook
 
     if Terminal.isColor() then
         Terminal.setFG(Color.PURPLE)
@@ -31,68 +27,68 @@ function OmegleClient.main(args)
     session:requestEvent()
 
     local sendString = String.new()
-    connectionHook = Hooks.add("http_success", function(url, handle)
-        local event = session:extractEvent(handle.readAll())
-        if event then
-            if event.type == OmegleSession.EVENT_MESSAGE then
-                Terminal.clearLine()
+
+    while connected do
+        local event = Events.pull("key", "char", "http_success")
+
+        if event.ident == "key" then
+            local k = event.key
+            if k == 28 then
+                session:send(sendString)
                 if Terminal.isColor() then
-                    Terminal.setFG(Color.RED)
-                    System.write("Stranger: ")
+                    Terminal.setFG(Color.BLUE)
+                    System.write("You: ")
                     Terminal.setFG(Color.YELLOW)
                 else
-                    System.write("Stranger: ")
+                    System.write("You: ")
                 end
-                System.print(event.message)
+                System.print(sendString)
+                sendString = String.new()
                 drawInput(typing, sendString)
-            elseif event.type == OmegleSession.EVENT_TYPING then
-                typing = not typing
-            elseif event.type == OmegleSession.EVENT_DISCONNECTED then
+            elseif k == 14 then
+                if sendString:length() ~= 0 then
+                    sendString:remove(-1, 1)
+                    drawInput(typing, sendString)
+                end
+            elseif k == 157 then
+                connected = false
+                session:disconnect()
                 if Terminal.isColor() then
                     Terminal.setFG(Color.PURPLE)
                 end
-                System.print("Stranger disconnected.")
-                connected = false
-                Hooks.remove(connectionHook)
+                System.print("You have disconnected.")
             end
-        end
-        session:requestEvent()
-    end)
-
-    Hooks.add("char", function(c)
-        sendString:add(c)
-        drawInput(typing, sendString)
-    end)
-
-    Hooks.add("key", function(k)
-        if k == 28 then
-            session:send(sendString)
-            if Terminal.isColor() then
-                Terminal.setFG(Color.BLUE)
-                System.write("You: ")
-                Terminal.setFG(Color.YELLOW)
-            else
-                System.write("You: ")
-            end
-            System.print(sendString)
-            sendString = String.new()
+        elseif event.ident == "char" then
+            local c = event.char
+            sendString:add(c)
             drawInput(typing, sendString)
-        elseif k == 14 then
-            if sendString:length() == 0 then return end
-            sendString:remove(-1, 1)
-            drawInput(typing, sendString)
-        elseif k == 157 then
-            connected = false
-            session:disconnect()
-            if Terminal.isColor() then
-                Terminal.setFG(Color.PURPLE)
+        elseif event.ident == "http_success" then
+            local omegleEvent = session:extractEvent(event.response.body)
+            if omegleEvent then
+                if omegleEvent.type == OmegleSession.EVENT_MESSAGE then
+                    Terminal.clearLine()
+                    if Terminal.isColor() then
+                        Terminal.setFG(Color.RED)
+                        System.write("Stranger: ")
+                        Terminal.setFG(Color.YELLOW)
+                    else
+                        System.write("Stranger: ")
+                    end
+                    System.print(omegleEvent.message)
+                    drawInput(typing, sendString)
+                elseif omegleEvent.type == OmegleSession.EVENT_TYPING then
+                    typing = not typing
+                elseif omegleEvent.type == OmegleSession.EVENT_DISCONNECTED then
+                    if Terminal.isColor() then
+                        Terminal.setFG(Color.PURPLE)
+                    end
+                    System.print("Stranger disconnected.")
+                    connected = false
+                    return
+                end
             end
-            System.print("You have disconnected.")
+            session:requestEvent()
         end
-    end)
-
-    while connected do
-        Hooks.run()
     end
 end
 
